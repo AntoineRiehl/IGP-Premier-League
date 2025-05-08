@@ -1,0 +1,201 @@
+---
+title: "IGP Hypothesis 1"
+author: "Ed Dalton"
+date: "2025-04-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+library(tidyverse)
+library(readxl)
+library(nnet)
+library(broom)
+library(car)
+library(performance)
+library(caret)
+```
+```{r}
+install.packages("car")
+install.packages("janitor")
+```
+```{r}
+
+library(car)
+library(janitor)
+
+```
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+
+data <- read_excel("/Users/edward/Documents/Documents – Edward’s MacBook Pro/Year 1/Year 2/IGP/EPL data.xlsx", sheet = "European Qualification")
+
+# Clean column names (lowercase, snake_case)
+data <- clean_names(data)
+
+# View structure
+head(data)
+
+
+
+
+```
+
+
+
+```{r}
+
+
+data$end_status <- as.factor(data$end_status)
+
+# Setting the parameters so the end status is compared with 'Survived'
+data$end_status <- relevel(as.factor(data$end_status), ref = "Survived")
+
+#Designing and running the model
+model <- multinom(end_status ~ profit_loss + manager_changes, data = data)
+
+summary_model <- summary(model)
+
+# Obtaining coefficients and standard error values
+coefs <- summary_model$coefficients
+std_errs <- summary_model$standard.errors
+
+# Measuring and calculating the magnitude of impact
+abs_effects <- abs(coefs)
+
+
+# Combining impact magnitude values into one table
+effect_table <- data.frame(
+  Outcome = rownames(coefs),
+  Net_Spend_Impact = abs_effects[,"profit_loss"],
+  Manager_Changes_Impact = abs_effects[,"manager_changes"]
+)
+
+print(effect_table)
+
+
+```
+
+```{r}
+
+z_scores <- coefs / std_errs
+z_scores
+# Calculating p-values with Z-scores
+p_values <- 2 * (1 - pnorm(abs(z_scores)))
+
+
+p_values
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+Hypothesis 2
+
+H0: There is no significant difference in features between teams that were relagted qdfter oneseason and temas that were relgated after multiple seasons in the EPL
+
+
+```{r}
+install.packages("MVN")
+
+```
+
+```{r}
+
+
+# Load necessary libraries
+library(car)
+library(ggplot2)
+library(MVN)
+library(psych)
+
+# Simplifying the variables
+manager_changes <- relegation_df$Manager_Changes
+net_spend <- relegation_df$Profit_Loss
+end_status <- as.factor(relegation_df$End_Status)
+
+# Grouping the features together for various statistical analyses
+dependent_vars <- relegation_df[, c("Manager_Changes", "Profit_Loss")]
+
+# Normality Tests for each
+
+# Testing normality in each relegation category with Shapiro-Wilk's  (per group)
+by(dependent_vars, end_status, function(sub) {
+  apply(sub, 2, shapiro.test)
+})
+
+# Q-Q Plots
+qqnorm(manager_changes); qqline(manager_changes, col = "red")
+qqnorm(net_spend); qqline(net_spend, col = "blue")
+
+# Multivariate Normality (Mardia’s Test)
+mvn(data = dependent_vars, mvnTest = "mardia")
+
+# Testing data homogeneity of variance for each variable
+leveneTest(Manager_Changes ~ End_Status, data = relegation_df)
+leveneTest(Profit_Loss ~ End_Status, data = relegation_df)
+
+
+# Boxplots for each feature and relegation category
+ggplot(relegation_df, aes(x = End_Status, y = Manager_Changes)) +
+  geom_boxplot(fill = "lightblue") +
+  ggtitle("Boxplot of Manager Changes by Group")
+
+ggplot(relegation_df, aes(x = End_Status, y = Profit_Loss)) +
+  geom_boxplot(fill = "lightgreen") +
+  ggtitle("Boxplot of Net Spend by Group")
+
+# Histograms for each feature to visualize distribution.
+hist(manager_changes, main = "Histogram of Manager Changes", col = "skyblue", breaks = 10)
+hist(net_spend, main = "Histogram of Profit/Loss", col = "lightgreen", breaks = 10)
+
+### 5. Correlation Between Manager changes and Net Spend
+cor.test(manager_changes, net_spend)
+
+
+
+```
+
+
+
+```{r}
+
+h2_data <- read_excel("/Users/edward/Downloads/EPL data.xlsx", sheet = "Season Summary")
+
+install.packages("caret")
+
+#Excluding the category 'Survived' so the data frame only involves the relegated categories.
+relegation_df <- h2_data[h2_data$End_Status != "Survived", ]
+head(relegation_df)
+
+#Adjusting data points to they are compatible with the model
+relegation_df[relegation_df == "NAN"] <- NA
+
+#Adjusting the name of the column so it compatible with the model.
+names(relegation_df)[names(relegation_df) == "Profit/Loss"] <- "Profit_Loss"
+
+
+#Multivariate ANOVA model
+h2_model <- manova(cbind(Manager_Changes, Profit_Loss) ~ End_Status, data = relegation_df)
+summary(h2_model, test = "Pillai")
+
+```
+
+```{r}
+head(relegation_df)
+
+```
