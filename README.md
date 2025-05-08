@@ -11,6 +11,7 @@ All code used in our IGP project on investigating Premier League final standings
 - 7.Gradient Boost
 - 8.Model Selection using K-Fold
 - 9.Gradient Boost CV
+- 10.IGP Hypotheses Tests
 
 ## Quick Explanation of what the scripts do:
 - 1.This is the first script that was needed when we gathered all documents, one document by season. We had to merge all documents into one and this has been done using this script.
@@ -21,3 +22,4 @@ All code used in our IGP project on investigating Premier League final standings
 - 7.After a little bit of playing around and reading articles on Machine Learning, we realised that boosting algorithms were more suited for our analysis. This is a script training a Gradient Boost algorithm on the newly created features thanks to 5. and 6., to then predict final standings of the Premier League teams in the 2024-2025 season.
 - 8.K-Fold Cross Validation was then performed to ensure we were training and using the most optimised setup for our model.
 - 9.The same Gradient Boost as 7. but including Cross Validation for more robustness.
+- 10.The only non preprocessing code. This R script was used to perform te statistical analyses answering our project's hypotheses.
